@@ -309,6 +309,22 @@ export const sharedToolsRelations = relations(sharedTools, ({ one, many }) => ({
   }),
   tags: many(sharedToolTags),
   reviews: many(toolReviews),
+  versions: many(toolVersions),
+}));
+
+export const sharedToolTagsRelations = relations(sharedToolTags, ({ one }) => ({
+  tool: one(sharedTools, {
+    fields: [sharedToolTags.toolId],
+    references: [sharedTools.id],
+  }),
+  tag: one(toolTags, {
+    fields: [sharedToolTags.tagId],
+    references: [toolTags.id],
+  }),
+}));
+
+export const toolTagsRelations = relations(toolTags, ({ many }) => ({
+  tools: many(sharedToolTags),
 }));
 
 export const toolReviewsRelations = relations(toolReviews, ({ one }) => ({
@@ -319,5 +335,27 @@ export const toolReviewsRelations = relations(toolReviews, ({ one }) => ({
   user: one(users, {
     fields: [toolReviews.userId],
     references: [users.id],
+  }),
+}));
+
+// Tool Versions for version management
+export const toolVersions = sqliteTable("tool_versions", {
+  id: text("id").primaryKey(),
+  toolId: text("tool_id")
+    .notNull()
+    .references(() => sharedTools.id, { onDelete: "cascade" }),
+  version: text("version").notNull(),
+  changelog: text("changelog"),
+  installCommand: text("install_command"),
+  configSchema: text("config_schema"),
+  isLatest: integer("is_latest", { mode: "boolean" }).default(false),
+  publishedAt: integer("published_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const toolVersionsRelations = relations(toolVersions, ({ one }) => ({
+  tool: one(sharedTools, {
+    fields: [toolVersions.toolId],
+    references: [sharedTools.id],
   }),
 }));

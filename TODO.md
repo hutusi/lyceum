@@ -47,13 +47,13 @@
 
 ## Phase 6: Share Section
 - [x] Create Share page with tabs for Skills, Agents, MCPs
-- [ ] Build tool detail page
-- [ ] Create tool publish form
-- [ ] Implement install command generation
-- [ ] Add tool reviews and ratings
-- [ ] Build tool search with filters
-- [ ] Create admin approval workflow for tools
-- [ ] Add version management
+- [x] Build tool detail page
+- [x] Create tool publish form
+- [x] Implement install command generation
+- [x] Add tool reviews and ratings
+- [x] Build tool search with filters
+- [x] Create admin approval workflow for tools
+- [x] Add version management
 
 ## Phase 7: User Features
 - [ ] Enhance user profile page
