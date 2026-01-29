@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, BookOpen, GraduationCap, Code2, Rocket, User, Settings, LogOut } from "lucide-react";
+import { Menu, BookOpen, GraduationCap, Code2, Rocket, Share2, User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -21,6 +21,7 @@ const navItems = [
   { href: "/learn", label: "Learn", icon: GraduationCap, description: "Courses & Workshops" },
   { href: "/practice", label: "Practice", icon: Code2, description: "Coding Tasks" },
   { href: "/create", label: "Create", icon: Rocket, description: "Build & Showcase" },
+  { href: "/share", label: "Share", icon: Share2, description: "Skills, Agents & MCPs" },
 ];
 
 export function Header() {

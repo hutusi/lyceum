@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, GraduationCap, Code2, Rocket, ArrowRight } from "lucide-react";
+import { BookOpen, GraduationCap, Code2, Rocket, Share2, ArrowRight } from "lucide-react";
 
 const sections = [
   {
@@ -35,6 +35,14 @@ const sections = [
     href: "/create",
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
+  },
+  {
+    title: "Share",
+    description: "Share your skills, sub-agents, and MCPs with the community. Discover tools built by others.",
+    icon: Share2,
+    href: "/share",
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
   },
 ];
 
@@ -72,7 +80,7 @@ export default function HomePage() {
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Explore Our Sections</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {sections.map((section) => {
               const Icon = section.icon;
               return (

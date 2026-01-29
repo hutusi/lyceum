@@ -254,3 +254,70 @@ export const projectsRelations = relations(projects, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// ============ SHARE SECTION ============
+export const sharedTools = sqliteTable("shared_tools", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id),
+  name: text("name").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description"),
+  readme: text("readme"),
+  type: text("type", { enum: ["skill", "agent", "mcp"] }).notNull(),
+  version: text("version").default("1.0.0"),
+  repoUrl: text("repo_url"),
+  installCommand: text("install_command"),
+  configSchema: text("config_schema"),
+  downloads: integer("downloads").default(0),
+  stars: integer("stars").default(0),
+  status: text("status", { enum: ["pending", "approved", "featured", "rejected"] }).default("pending"),
+  publishedAt: integer("published_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const toolTags = sqliteTable("tool_tags", {
+  id: text("id").primaryKey(),
+  name: text("name").unique().notNull(),
+  slug: text("slug").unique().notNull(),
+});
+
+export const sharedToolTags = sqliteTable("shared_tool_tags", {
+  toolId: text("tool_id")
+    .notNull()
+    .references(() => sharedTools.id, { onDelete: "cascade" }),
+  tagId: text("tag_id")
+    .notNull()
+    .references(() => toolTags.id, { onDelete: "cascade" }),
+});
+
+export const toolReviews = sqliteTable("tool_reviews", {
+  id: text("id").primaryKey(),
+  toolId: text("tool_id")
+    .notNull()
+    .references(() => sharedTools.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => users.id),
+  rating: integer("rating").notNull(),
+  content: text("content"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const sharedToolsRelations = relations(sharedTools, ({ one, many }) => ({
+  user: one(users, {
+    fields: [sharedTools.userId],
+    references: [users.id],
+  }),
+  tags: many(sharedToolTags),
+  reviews: many(toolReviews),
+}));
+
+export const toolReviewsRelations = relations(toolReviews, ({ one }) => ({
+  tool: one(sharedTools, {
+    fields: [toolReviews.toolId],
+    references: [sharedTools.id],
+  }),
+  user: one(users, {
+    fields: [toolReviews.userId],
+    references: [users.id],
+  }),
+}));

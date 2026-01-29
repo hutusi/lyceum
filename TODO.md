@@ -45,21 +45,31 @@
 - [ ] Create Nexus Weekly archive page
 - [ ] Build Nexus Weekly editor for admins
 
-## Phase 6: User Features
+## Phase 6: Share Section
+- [x] Create Share page with tabs for Skills, Agents, MCPs
+- [ ] Build tool detail page
+- [ ] Create tool publish form
+- [ ] Implement install command generation
+- [ ] Add tool reviews and ratings
+- [ ] Build tool search with filters
+- [ ] Create admin approval workflow for tools
+- [ ] Add version management
+
+## Phase 7: User Features
 - [ ] Enhance user profile page
 - [ ] Add user settings page
 - [ ] Implement email notifications
 - [ ] Add user activity history
 - [ ] Build bookmarks/favorites system
 
-## Phase 7: Admin Dashboard
+## Phase 8: Admin Dashboard
 - [ ] Add analytics/statistics cards
 - [ ] Build user management page
 - [ ] Create content moderation tools
 - [ ] Add bulk actions for content
 - [ ] Implement activity logs
 
-## Phase 8: Polish & Launch
+## Phase 9: Polish & Launch
 - [ ] SEO optimization (meta tags, sitemap)
 - [ ] Performance tuning (image optimization, caching)
 - [ ] Mobile responsiveness testing

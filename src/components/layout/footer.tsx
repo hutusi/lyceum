@@ -7,6 +7,7 @@ const footerLinks = {
     { label: "Learn", href: "/learn" },
     { label: "Practice", href: "/practice" },
     { label: "Create", href: "/create" },
+    { label: "Share", href: "/share" },
   ],
   resources: [
     { label: "Documentation", href: "/docs" },
