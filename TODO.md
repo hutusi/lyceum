@@ -9,7 +9,7 @@
 - [x] Set up route structure for all sections
 - [x] Create CLAUDE.md documentation
 
-## Phase 2: Know Section
+## Phase 2: News Section
 - [ ] Create article listing page with pagination
 - [ ] Build article detail page with MDX rendering
 - [ ] Implement video content type with embed support

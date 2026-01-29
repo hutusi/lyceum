@@ -2,18 +2,18 @@ import { Metadata } from "next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Radio } from "lucide-react";
+import { Newspaper, Video, Radio } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Know",
+  title: "News",
   description: "Stay informed with the latest AI tool news, articles, and insights.",
 };
 
-export default function KnowPage() {
+export default function NewsPage() {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Know</h1>
+        <h1 className="text-3xl font-bold mb-2">News</h1>
         <p className="text-muted-foreground">
           Stay informed with the latest AI tool news, general information, and release notes.
         </p>
@@ -22,7 +22,7 @@ export default function KnowPage() {
       <Tabs defaultValue="articles" className="space-y-6">
         <TabsList>
           <TabsTrigger value="articles" className="gap-2">
-            <BookOpen className="h-4 w-4" />
+            <Newspaper className="h-4 w-4" />
             Articles
           </TabsTrigger>
           <TabsTrigger value="videos" className="gap-2">

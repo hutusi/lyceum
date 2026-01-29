@@ -3,7 +3,7 @@ import { Github, Twitter } from "lucide-react";
 
 const footerLinks = {
   sections: [
-    { label: "Know", href: "/know" },
+    { label: "News", href: "/news" },
     { label: "Learn", href: "/learn" },
     { label: "Practice", href: "/practice" },
     { label: "Create", href: "/create" },

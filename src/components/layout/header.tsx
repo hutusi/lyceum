@@ -13,11 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, BookOpen, GraduationCap, Code2, Rocket, Share2, User, Settings, LogOut } from "lucide-react";
+import { Menu, Newspaper, GraduationCap, Code2, Rocket, Share2, User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/know", label: "Know", icon: BookOpen, description: "News & Insights" },
+  { href: "/news", label: "News", icon: Newspaper, description: "AI News & Insights" },
   { href: "/learn", label: "Learn", icon: GraduationCap, description: "Courses & Workshops" },
   { href: "/practice", label: "Practice", icon: Code2, description: "Coding Tasks" },
   { href: "/create", label: "Create", icon: Rocket, description: "Build & Showcase" },

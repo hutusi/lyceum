@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, GraduationCap, Code2, Rocket, Share2, ArrowRight } from "lucide-react";
+import { Newspaper, GraduationCap, Code2, Rocket, Share2, ArrowRight } from "lucide-react";
 
 const sections = [
   {
-    title: "Know",
+    title: "News",
     description: "Stay informed with the latest AI tool news, articles, and insights from the industry.",
-    icon: BookOpen,
-    href: "/know",
+    icon: Newspaper,
+    href: "/news",
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
   },
@@ -70,7 +70,7 @@ export default function HomePage() {
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/know">Explore News</Link>
+              <Link href="/news">Explore News</Link>
             </Button>
           </div>
         </div>
