@@ -240,6 +240,28 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
   progress: many(lessonProgress),
 }));
 
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  user: one(users, {
+    fields: [enrollments.userId],
+    references: [users.id],
+  }),
+  course: one(courses, {
+    fields: [enrollments.courseId],
+    references: [courses.id],
+  }),
+}));
+
+export const lessonProgressRelations = relations(lessonProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [lessonProgress.userId],
+    references: [users.id],
+  }),
+  lesson: one(lessons, {
+    fields: [lessonProgress.lessonId],
+    references: [lessons.id],
+  }),
+}));
+
 export const discussionsRelations = relations(discussions, ({ one, many }) => ({
   topic: one(practiceTopics, {
     fields: [discussions.topicId],
