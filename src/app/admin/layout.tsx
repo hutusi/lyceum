@@ -18,7 +18,7 @@ const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/content/articles", label: "Articles", icon: FileText },
   { href: "/admin/content/courses", label: "Courses", icon: GraduationCap },
-  { href: "/admin/content/topics", label: "Practice Topics", icon: Code2 },
+  { href: "/admin/content/practice", label: "Practice Topics", icon: Code2 },
   { href: "/admin/content/projects", label: "Projects", icon: Rocket },
   { href: "/admin/content/tools", label: "Shared Tools", icon: Share2 },
   { href: "/admin/users", label: "Users", icon: Users },
