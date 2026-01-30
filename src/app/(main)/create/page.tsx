@@ -1,71 +1,47 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { eq, desc, or } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { projects, nexusWeeklyIssues, users } from "@/lib/db/schema";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Rocket, Code, Newspaper, Star, ExternalLink, Github } from "lucide-react";
+import { Rocket, Code, Newspaper, Star, ExternalLink, Github, Calendar } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Create",
   description: "Build innovative AI applications, showcase your projects, and explore the AI Nexus Weekly.",
 };
 
-const featuredProjects = [
-  {
-    id: 1,
-    title: "AI Code Reviewer",
-    description: "An AI-powered code review assistant that provides intelligent feedback on pull requests.",
-    author: "techguru",
-    stars: 45,
-    tags: ["AI", "Code Review", "GitHub"],
-    demoUrl: "#",
-    repoUrl: "#",
-  },
-  {
-    id: 2,
-    title: "Prompt Library",
-    description: "A curated collection of effective prompts for various AI models and use cases.",
-    author: "promptmaster",
-    stars: 32,
-    tags: ["Prompts", "Library", "Templates"],
-    demoUrl: "#",
-    repoUrl: "#",
-  },
-  {
-    id: 3,
-    title: "Voice AI Assistant",
-    description: "A voice-enabled AI assistant built with speech recognition and synthesis.",
-    author: "voicedev",
-    stars: 28,
-    tags: ["Voice", "Assistant", "Speech"],
-    demoUrl: "#",
-    repoUrl: "#",
-  },
-];
+export default async function CreatePage() {
+  // Fetch featured/approved projects
+  const featuredProjects = await db
+    .select({
+      id: projects.id,
+      title: projects.title,
+      description: projects.description,
+      repoUrl: projects.repoUrl,
+      demoUrl: projects.demoUrl,
+      coverImage: projects.coverImage,
+      status: projects.status,
+      userName: users.name,
+    })
+    .from(projects)
+    .leftJoin(users, eq(projects.userId, users.id))
+    .where(or(eq(projects.status, "featured"), eq(projects.status, "approved")))
+    .orderBy(desc(projects.status), desc(projects.createdAt))
+    .limit(6);
 
-const nexusWeeklyIssues = [
-  {
-    id: 1,
-    issueNumber: 12,
-    title: "The Rise of AI Agents",
-    publishedAt: "January 20, 2025",
-  },
-  {
-    id: 2,
-    issueNumber: 11,
-    title: "LLM Fine-tuning Best Practices",
-    publishedAt: "January 13, 2025",
-  },
-  {
-    id: 3,
-    issueNumber: 10,
-    title: "Building Production AI Systems",
-    publishedAt: "January 6, 2025",
-  },
-];
+  // Fetch latest Nexus Weekly issues
+  const latestIssues = await db
+    .select()
+    .from(nexusWeeklyIssues)
+    .where(eq(nexusWeeklyIssues.status, "published"))
+    .orderBy(desc(nexusWeeklyIssues.issueNumber))
+    .limit(3);
 
-export default function CreatePage() {
   return (
     <div className="container py-8">
       <div className="mb-8">
@@ -98,52 +74,84 @@ export default function CreatePage() {
               <Link href="/create/showcase/submit">Submit Your Project</Link>
             </Button>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProjects.map((project) => (
-              <Card key={project.id} className="flex flex-col hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <Badge variant="secondary">Featured</Badge>
-                    <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                      {project.stars}
-                    </span>
-                  </div>
-                  <CardTitle className="line-clamp-1">{project.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">{project.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-4">by {project.author}</p>
-                </CardContent>
-                <CardFooter className="flex gap-2">
-                  <Button variant="outline" size="sm" asChild className="flex-1">
-                    <a href={project.repoUrl} target="_blank" rel="noopener noreferrer">
-                      <Github className="h-4 w-4 mr-2" />
-                      Code
-                    </a>
-                  </Button>
-                  <Button size="sm" asChild className="flex-1">
-                    <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Demo
-                    </a>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-          <div className="text-center">
-            <Button variant="outline" asChild>
-              <Link href="/create/showcase">View All Projects</Link>
-            </Button>
-          </div>
+
+          {featuredProjects.length === 0 ? (
+            <Card className="border-dashed">
+              <CardHeader className="text-center">
+                <Rocket className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <CardTitle>No Projects Yet</CardTitle>
+                <CardDescription>
+                  Be the first to submit a project to the showcase!
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="justify-center">
+                <Button asChild>
+                  <Link href="/create/showcase/submit">Submit Your Project</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredProjects.map((project) => (
+                  <Card key={project.id} className="flex flex-col hover:shadow-lg transition-shadow">
+                    {project.coverImage && (
+                      <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                        <Image
+                          src={project.coverImage}
+                          alt={project.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        {project.status === "featured" && (
+                          <Badge className="bg-yellow-500/10 text-yellow-600">
+                            <Star className="h-3 w-3 mr-1 fill-current" />
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+                      <CardTitle className="line-clamp-1">
+                        <Link href={`/create/showcase/${project.id}`} className="hover:underline">
+                          {project.title}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2">{project.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      <p className="text-sm text-muted-foreground">by {project.userName || "Anonymous"}</p>
+                    </CardContent>
+                    <CardFooter className="flex gap-2">
+                      {project.repoUrl && (
+                        <Button variant="outline" size="sm" asChild className="flex-1">
+                          <a href={project.repoUrl} target="_blank" rel="noopener noreferrer">
+                            <Github className="h-4 w-4 mr-2" />
+                            Code
+                          </a>
+                        </Button>
+                      )}
+                      {project.demoUrl && (
+                        <Button size="sm" asChild className="flex-1">
+                          <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Demo
+                          </a>
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+              <div className="text-center">
+                <Button variant="outline" asChild>
+                  <Link href="/create/showcase">View All Projects</Link>
+                </Button>
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="api" className="space-y-6">
@@ -156,24 +164,30 @@ export default function CreatePage() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
-                <Card className="border-dashed cursor-pointer hover:border-primary transition-colors">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-lg">OpenAI GPT</CardTitle>
-                    <CardDescription>Test GPT-4 and GPT-3.5</CardDescription>
-                  </CardHeader>
-                </Card>
-                <Card className="border-dashed cursor-pointer hover:border-primary transition-colors">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-lg">Anthropic Claude</CardTitle>
-                    <CardDescription>Test Claude 3 models</CardDescription>
-                  </CardHeader>
-                </Card>
-                <Card className="border-dashed cursor-pointer hover:border-primary transition-colors">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-lg">Open Source</CardTitle>
-                    <CardDescription>Llama, Mistral, and more</CardDescription>
-                  </CardHeader>
-                </Card>
+                <Link href="/create/api-playground?model=openai">
+                  <Card className="border-dashed cursor-pointer hover:border-primary transition-colors">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-lg">OpenAI GPT</CardTitle>
+                      <CardDescription>Test GPT-4 and GPT-3.5</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+                <Link href="/create/api-playground?model=anthropic">
+                  <Card className="border-dashed cursor-pointer hover:border-primary transition-colors">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-lg">Anthropic Claude</CardTitle>
+                      <CardDescription>Test Claude 3 models</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+                <Link href="/create/api-playground?model=opensource">
+                  <Card className="border-dashed cursor-pointer hover:border-primary transition-colors">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-lg">Open Source</CardTitle>
+                      <CardDescription>Llama, Mistral, and more</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
               </div>
             </CardContent>
             <CardFooter>
@@ -196,23 +210,39 @@ export default function CreatePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {nexusWeeklyIssues.map((issue) => (
-                <div
-                  key={issue.id}
-                  className="flex justify-between items-center p-4 rounded-lg border hover:bg-muted transition-colors cursor-pointer"
-                >
-                  <div>
-                    <Badge variant="outline" className="mb-2">
-                      Issue #{issue.issueNumber}
-                    </Badge>
-                    <h3 className="font-medium">{issue.title}</h3>
-                    <p className="text-sm text-muted-foreground">{issue.publishedAt}</p>
-                  </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/create/nexus-weekly/${issue.id}`}>Read →</Link>
-                  </Button>
+              {latestIssues.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  The first issue of AI Nexus Weekly is coming soon!
                 </div>
-              ))}
+              ) : (
+                latestIssues.map((issue) => (
+                  <Link
+                    key={issue.id}
+                    href={`/create/nexus-weekly/${issue.id}`}
+                    className="block"
+                  >
+                    <div className="flex justify-between items-center p-4 rounded-lg border hover:bg-muted transition-colors">
+                      <div>
+                        <Badge variant="outline" className="mb-2">
+                          Issue #{issue.issueNumber}
+                        </Badge>
+                        <h3 className="font-medium">{issue.title}</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <Calendar className="h-3 w-3" />
+                          {issue.publishedAt?.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        Read →
+                      </Button>
+                    </div>
+                  </Link>
+                ))
+              )}
             </CardContent>
             <CardFooter>
               <Button variant="outline" asChild className="w-full">
