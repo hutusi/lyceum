@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { courses, enrollments } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { trackActivity } from "@/lib/activity";
 
 // POST /api/courses/[slug]/enroll - Enroll in a course
 export async function POST(
@@ -61,6 +62,15 @@ export async function POST(
         courseId: course.id,
       })
       .returning();
+
+    // Track activity
+    await trackActivity({
+      userId: session.user.id!,
+      type: "course_enrolled",
+      resourceType: "course",
+      resourceId: course.id,
+      resourceTitle: course.title,
+    });
 
     return NextResponse.json(
       {

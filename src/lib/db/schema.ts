@@ -189,7 +189,7 @@ export const nexusWeeklyIssues = sqliteTable("nexus_weekly_issues", {
 });
 
 // ============ RELATIONS ============
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   articles: many(articles),
@@ -198,6 +198,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   discussions: many(discussions),
   comments: many(comments),
   projects: many(projects),
+  settings: one(userSettings),
+  activities: many(userActivities),
+  bookmarks: many(bookmarks),
 }));
 
 export const articlesRelations = relations(articles, ({ one, many }) => ({
@@ -394,5 +397,86 @@ export const toolVersionsRelations = relations(toolVersions, ({ one }) => ({
   tool: one(sharedTools, {
     fields: [toolVersions.toolId],
     references: [sharedTools.id],
+  }),
+}));
+
+// ============ USER FEATURES ============
+export const userSettings = sqliteTable("user_settings", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  bio: text("bio"),
+  website: text("website"),
+  location: text("location"),
+  github: text("github"),
+  twitter: text("twitter"),
+  emailNotifications: integer("email_notifications", { mode: "boolean" }).default(true),
+  weeklyDigest: integer("weekly_digest", { mode: "boolean" }).default(true),
+  courseUpdates: integer("course_updates", { mode: "boolean" }).default(true),
+  discussionReplies: integer("discussion_replies", { mode: "boolean" }).default(true),
+  projectFeedback: integer("project_feedback", { mode: "boolean" }).default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const userActivities = sqliteTable("user_activities", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type", {
+    enum: [
+      "course_enrolled",
+      "course_completed",
+      "lesson_completed",
+      "discussion_created",
+      "comment_added",
+      "project_submitted",
+      "project_approved",
+      "tool_published",
+      "review_added",
+    ],
+  }).notNull(),
+  resourceType: text("resource_type", {
+    enum: ["course", "lesson", "discussion", "comment", "project", "tool", "review", "article"],
+  }),
+  resourceId: text("resource_id"),
+  resourceTitle: text("resource_title"),
+  metadata: text("metadata"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const bookmarks = sqliteTable("bookmarks", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  resourceType: text("resource_type", {
+    enum: ["article", "course", "tool", "discussion", "project"],
+  }).notNull(),
+  resourceId: text("resource_id").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [userSettings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userActivitiesRelations = relations(userActivities, ({ one }) => ({
+  user: one(users, {
+    fields: [userActivities.userId],
+    references: [users.id],
+  }),
+}));
+
+export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
+  user: one(users, {
+    fields: [bookmarks.userId],
+    references: [users.id],
   }),
 }));

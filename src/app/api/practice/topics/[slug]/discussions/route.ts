@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { practiceTopics, discussions, comments, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { trackActivity } from "@/lib/activity";
 
 // GET /api/practice/topics/[slug]/discussions - List discussions for a topic
 export async function GET(
@@ -98,6 +99,16 @@ export async function POST(
         content,
       })
       .returning();
+
+    // Track activity
+    await trackActivity({
+      userId: session.user.id!,
+      type: "discussion_created",
+      resourceType: "discussion",
+      resourceId: newDiscussion[0].id,
+      resourceTitle: title,
+      metadata: { topicId: topic.id, topicTitle: topic.title },
+    });
 
     return NextResponse.json(
       {

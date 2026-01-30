@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { projects, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { trackActivity } from "@/lib/activity";
 
 // GET /api/projects - List projects
 export async function GET(request: NextRequest) {
@@ -101,6 +102,15 @@ export async function POST(request: NextRequest) {
         status: "pending", // Projects start as pending for admin review
       })
       .returning();
+
+    // Track activity
+    await trackActivity({
+      userId: session.user.id!,
+      type: "project_submitted",
+      resourceType: "project",
+      resourceId: newProject[0].id,
+      resourceTitle: title,
+    });
 
     return NextResponse.json(
       {

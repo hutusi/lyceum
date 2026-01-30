@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { discussions, comments, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { trackActivity } from "@/lib/activity";
 
 // GET /api/practice/discussions/[id]/comments - Get comments for a discussion
 export async function GET(
@@ -130,6 +131,16 @@ export async function POST(
         parentId: parentId || null,
       })
       .returning();
+
+    // Track activity
+    await trackActivity({
+      userId: session.user.id!,
+      type: "comment_added",
+      resourceType: "comment",
+      resourceId: newComment[0].id,
+      resourceTitle: discussion.title,
+      metadata: { discussionId: id },
+    });
 
     // Fetch with user info
     const commentWithUser = await db

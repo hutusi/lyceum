@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { courses, lessons, enrollments, lessonProgress } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { trackActivity } from "@/lib/activity";
 
 // POST /api/courses/[slug]/lessons/[lessonId]/progress - Update lesson progress
 export async function POST(
@@ -106,6 +107,18 @@ export async function POST(
           lastAccessedAt: new Date(),
         })
         .returning();
+    }
+
+    // Track lesson completion activity
+    if (completed && (!existingProgress || !existingProgress.completed)) {
+      await trackActivity({
+        userId: session.user.id!,
+        type: "lesson_completed",
+        resourceType: "lesson",
+        resourceId: lessonId,
+        resourceTitle: lesson.title,
+        metadata: { courseId: course.id, courseTitle: course.title },
+      });
     }
 
     return NextResponse.json({
