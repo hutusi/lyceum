@@ -10,13 +10,13 @@
 - [x] Create CLAUDE.md documentation
 
 ## Phase 2: News Section
-- [ ] Create article listing page with pagination
-- [ ] Build article detail page with MDX rendering
-- [ ] Implement video content type with embed support
-- [ ] Add livestream placeholder/integration
-- [ ] Build admin CRUD for articles
-- [ ] Implement tags and filtering
-- [ ] Add search functionality
+- [x] Create article listing page with pagination
+- [x] Build article detail page with MDX rendering
+- [x] Implement video content type with embed support
+- [x] Add livestream placeholder/integration
+- [x] Build admin CRUD for articles
+- [x] Implement tags and filtering
+- [x] Add search functionality
 
 ## Phase 3: Learn Section
 - [ ] Build course catalog with category filters

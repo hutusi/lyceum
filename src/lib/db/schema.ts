@@ -208,6 +208,21 @@ export const articlesRelations = relations(articles, ({ one, many }) => ({
   articleTags: many(articleTags),
 }));
 
+export const tagsRelations = relations(tags, ({ many }) => ({
+  articleTags: many(articleTags),
+}));
+
+export const articleTagsRelations = relations(articleTags, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleTags.articleId],
+    references: [articles.id],
+  }),
+  tag: one(tags, {
+    fields: [articleTags.tagId],
+    references: [tags.id],
+  }),
+}));
+
 export const coursesRelations = relations(courses, ({ one, many }) => ({
   author: one(users, {
     fields: [courses.authorId],
