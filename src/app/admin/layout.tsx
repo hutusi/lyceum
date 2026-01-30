@@ -13,10 +13,13 @@ import {
   Users,
   Settings,
   ArrowLeft,
+  ShieldCheck,
+  Activity,
 } from "lucide-react";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck },
   { href: "/admin/content/articles", label: "Articles", icon: FileText },
   { href: "/admin/content/courses", label: "Courses", icon: GraduationCap },
   { href: "/admin/content/practice", label: "Practice Topics", icon: Code2 },
@@ -24,7 +27,7 @@ const adminNavItems = [
   { href: "/admin/content/nexus-weekly", label: "Nexus Weekly", icon: Newspaper },
   { href: "/admin/content/tools", label: "Shared Tools", icon: Share2 },
   { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/activity", label: "Activity Log", icon: Activity },
 ];
 
 export default async function AdminLayout({

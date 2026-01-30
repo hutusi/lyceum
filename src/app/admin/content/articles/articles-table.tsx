@@ -32,6 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -50,6 +51,7 @@ import {
   Radio,
   Globe,
   Archive,
+  Loader2,
 } from "lucide-react";
 
 interface Article {
@@ -103,6 +105,9 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [deleteSlug, setDeleteSlug] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<"publish" | "archive" | "delete" | null>(null);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const filteredArticles = articles.filter((article) => {
     const matchesSearch = article.title.toLowerCase().includes(search.toLowerCase());
@@ -110,6 +115,27 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
     const matchesType = typeFilter === "all" || article.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const allSelected = filteredArticles.length > 0 && filteredArticles.every((a) => selectedIds.has(a.id));
+  const someSelected = filteredArticles.some((a) => selectedIds.has(a.id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredArticles.map((a) => a.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
 
   const handlePublish = async (slug: string) => {
     try {
@@ -154,6 +180,34 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
     }
   };
 
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setIsBulkLoading(true);
+
+    const selectedArticles = articles.filter((a) => selectedIds.has(a.id));
+
+    try {
+      for (const article of selectedArticles) {
+        if (bulkAction === "delete") {
+          await fetch(`/api/articles/${article.slug}`, { method: "DELETE" });
+        } else {
+          await fetch(`/api/articles/${article.slug}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: bulkAction === "publish" ? "published" : "archived" }),
+          });
+        }
+      }
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch (error) {
+      console.error("Bulk action error:", error);
+    } finally {
+      setIsBulkLoading(false);
+      setBulkAction(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -192,11 +246,62 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
         </Select>
       </div>
 
+      {/* Bulk Actions */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-4 p-3 bg-muted rounded-lg">
+          <span className="text-sm font-medium">
+            {selectedIds.size} selected
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkAction("publish")}
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Publish
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkAction("archive")}
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              Archive
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600"
+              onClick={() => setBulkAction("delete")}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-auto"
+          >
+            Clear selection
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
@@ -209,7 +314,7 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
           <TableBody>
             {filteredArticles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No articles found
                 </TableCell>
               </TableRow>
@@ -217,7 +322,14 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
               filteredArticles.map((article) => {
                 const TypeIcon = typeIcons[article.type] || Newspaper;
                 return (
-                  <TableRow key={article.id}>
+                  <TableRow key={article.id} className={selectedIds.has(article.id) ? "bg-muted/50" : ""}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(article.id)}
+                        onCheckedChange={() => toggleOne(article.id)}
+                        aria-label={`Select ${article.title}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <p className="font-medium truncate max-w-[300px]">{article.title}</p>
                     </TableCell>
@@ -316,6 +428,48 @@ export function ArticlesTable({ articles }: ArticlesTableProps) {
               className="bg-red-600 hover:bg-red-700"
             >
               {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Action Confirmation */}
+      <AlertDialog open={!!bulkAction} onOpenChange={() => setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction === "publish" && "Publish Articles"}
+              {bulkAction === "archive" && "Archive Articles"}
+              {bulkAction === "delete" && "Delete Articles"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === "publish" &&
+                `Are you sure you want to publish ${selectedIds.size} article(s)?`}
+              {bulkAction === "archive" &&
+                `Are you sure you want to archive ${selectedIds.size} article(s)?`}
+              {bulkAction === "delete" &&
+                `Are you sure you want to delete ${selectedIds.size} article(s)? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkAction}
+              disabled={isBulkLoading}
+              className={bulkAction === "delete" ? "bg-red-600 hover:bg-red-700" : ""}
+            >
+              {isBulkLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {bulkAction === "publish" && "Publish All"}
+                  {bulkAction === "archive" && "Archive All"}
+                  {bulkAction === "delete" && "Delete All"}
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
