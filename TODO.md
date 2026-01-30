@@ -36,14 +36,14 @@
 - [ ] Build Q&A functionality
 - [x] Add admin CRUD for topics
 
-## Phase 5: Create Section
-- [ ] Build project showcase gallery
-- [ ] Create project submission form
-- [ ] Implement admin approval workflow
-- [ ] Build API playground interface
-- [ ] Add AI model proxy endpoints
-- [ ] Create Nexus Weekly archive page
-- [ ] Build Nexus Weekly editor for admins
+## Phase 5: Create Section ✅
+- [x] Build project showcase gallery
+- [x] Create project submission form
+- [x] Implement admin approval workflow
+- [x] Build API playground interface
+- [x] Add AI model proxy endpoints
+- [x] Create Nexus Weekly archive page
+- [x] Build Nexus Weekly editor for admins
 
 ## Phase 6: Share Section ✅
 - [x] Create Share page with tabs for Skills, Agents, MCPs
