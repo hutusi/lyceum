@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Sharpen your skills with coding tasks, exercises, and community discussions.",
 };
 
+export const dynamic = "force-dynamic";
+
 const difficultyColors = {
   easy: "bg-green-500/10 text-green-500",
   medium: "bg-yellow-500/10 text-yellow-500",

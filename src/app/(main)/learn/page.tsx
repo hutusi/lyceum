@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Master AI coding through structured courses, workshops, and prompt engineering techniques.",
 };
 
+export const dynamic = "force-dynamic";
+
 interface SearchParams {
   category?: string;
   difficulty?: string;

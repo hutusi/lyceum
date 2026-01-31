@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Share and discover skills, sub-agents, and MCPs for your Code Agent.",
 };
 
+export const dynamic = "force-dynamic";
+
 interface SearchParams {
   type?: string;
   search?: string;

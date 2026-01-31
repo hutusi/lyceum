@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lyceum.ai";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages
   const staticPages = [

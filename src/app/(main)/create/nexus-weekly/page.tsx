@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Your weekly digest of AI news, trends, and community highlights.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function NexusWeeklyPage() {
   const issues = await db
     .select()

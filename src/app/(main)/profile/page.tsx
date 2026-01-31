@@ -44,6 +44,8 @@ export const metadata: Metadata = {
   description: "Your profile and learning progress.",
 };
 
+export const dynamic = "force-dynamic";
+
 async function getUserStats(userId: string) {
   const [enrollmentCount] = await db
     .select({ count: count() })

@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Build innovative AI applications, showcase your projects, and explore the AI Nexus Weekly.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function CreatePage() {
   // Fetch featured/approved projects
   const featuredProjects = await db

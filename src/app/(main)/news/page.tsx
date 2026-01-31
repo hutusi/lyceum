@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Stay informed with the latest AI tool news, articles, videos, and live streams.",
 };
 
+export const dynamic = "force-dynamic";
+
 interface SearchParams {
   type?: string;
   search?: string;

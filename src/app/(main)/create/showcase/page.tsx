@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Explore innovative AI projects built by our community.",
 };
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   searchParams: Promise<{
     search?: string;
