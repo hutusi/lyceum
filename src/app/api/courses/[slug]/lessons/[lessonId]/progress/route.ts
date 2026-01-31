@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { courses, lessons, enrollments, lessonProgress } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { trackActivity } from "@/lib/activity";
+import { awardPoints } from "@/lib/gamification";
 
 // POST /api/courses/[slug]/lessons/[lessonId]/progress - Update lesson progress
 export async function POST(
@@ -109,7 +110,7 @@ export async function POST(
         .returning();
     }
 
-    // Track lesson completion activity
+    // Track lesson completion activity and award points
     if (completed && (!existingProgress || !existingProgress.completed)) {
       await trackActivity({
         userId: session.user.id!,
@@ -119,6 +120,63 @@ export async function POST(
         resourceTitle: lesson.title,
         metadata: { courseId: course.id, courseTitle: course.title },
       });
+
+      // Award points for lesson completion
+      await awardPoints({
+        userId: session.user.id!,
+        type: "lesson_completed",
+        resourceType: "lesson",
+        resourceId: lessonId,
+      });
+
+      // Check if all lessons in the course are completed
+      const totalLessons = await db
+        .select({ count: count() })
+        .from(lessons)
+        .where(eq(lessons.courseId, course.id));
+
+      const completedLessons = await db
+        .select({ count: count() })
+        .from(lessonProgress)
+        .innerJoin(lessons, eq(lessonProgress.lessonId, lessons.id))
+        .where(
+          and(
+            eq(lessonProgress.userId, session.user.id!),
+            eq(lessons.courseId, course.id),
+            eq(lessonProgress.completed, true)
+          )
+        );
+
+      // Course completed if all lessons are done
+      if (totalLessons[0]?.count === completedLessons[0]?.count) {
+        // Update enrollment with completion date
+        await db
+          .update(enrollments)
+          .set({ completedAt: new Date() })
+          .where(
+            and(
+              eq(enrollments.userId, session.user.id!),
+              eq(enrollments.courseId, course.id)
+            )
+          );
+
+        // Track course completion activity
+        await trackActivity({
+          userId: session.user.id!,
+          type: "course_completed",
+          resourceType: "course",
+          resourceId: course.id,
+          resourceTitle: course.title,
+        });
+
+        // Award course completion points
+        await awardPoints({
+          userId: session.user.id!,
+          type: "course_completed",
+          resourceType: "course",
+          resourceId: course.id,
+        });
+      }
     }
 
     return NextResponse.json({

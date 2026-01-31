@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sharedTools } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { awardPoints } from "@/lib/gamification";
 
 // PATCH /api/admin/tools/[id] - Update tool status (admin only)
 export async function PATCH(
@@ -52,6 +53,16 @@ export async function PATCH(
       })
       .where(eq(sharedTools.id, id))
       .returning();
+
+    // Award points if tool is approved and user exists
+    if (tool.userId && (status === "approved" || status === "featured") && tool.status === "pending") {
+      await awardPoints({
+        userId: tool.userId,
+        type: "tool_approved",
+        resourceType: "tool",
+        resourceId: id,
+      });
+    }
 
     return NextResponse.json({
       message: "Tool status updated successfully",

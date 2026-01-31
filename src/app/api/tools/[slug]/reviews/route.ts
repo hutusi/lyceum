@@ -4,6 +4,8 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { sharedTools, toolReviews } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { awardPoints } from "@/lib/gamification";
+import { trackActivity } from "@/lib/activity";
 
 // POST /api/tools/[slug]/reviews - Add a review
 export async function POST(
@@ -88,6 +90,23 @@ export async function POST(
       .update(sharedTools)
       .set({ stars })
       .where(eq(sharedTools.id, tool.id));
+
+    // Track activity
+    await trackActivity({
+      userId: session.user.id!,
+      type: "review_added",
+      resourceType: "review",
+      resourceId: newReview[0].id,
+      resourceTitle: tool.name,
+    });
+
+    // Award points for adding a review
+    await awardPoints({
+      userId: session.user.id!,
+      type: "review_added",
+      resourceType: "review",
+      resourceId: newReview[0].id,
+    });
 
     return NextResponse.json(
       {

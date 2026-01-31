@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { practiceTopics, discussions, comments, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { trackActivity } from "@/lib/activity";
+import { awardPoints } from "@/lib/gamification";
 
 // GET /api/practice/topics/[slug]/discussions - List discussions for a topic
 export async function GET(
@@ -108,6 +109,14 @@ export async function POST(
       resourceId: newDiscussion[0].id,
       resourceTitle: title,
       metadata: { topicId: topic.id, topicTitle: topic.title },
+    });
+
+    // Award points for creating discussion
+    await awardPoints({
+      userId: session.user.id!,
+      type: "discussion_created",
+      resourceType: "discussion",
+      resourceId: newDiscussion[0].id,
     });
 
     return NextResponse.json(

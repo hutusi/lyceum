@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { courses, enrollments } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { trackActivity } from "@/lib/activity";
+import { awardPoints } from "@/lib/gamification";
 
 // POST /api/courses/[slug]/enroll - Enroll in a course
 export async function POST(
@@ -71,6 +72,28 @@ export async function POST(
       resourceId: course.id,
       resourceTitle: course.title,
     });
+
+    // Award points
+    await awardPoints({
+      userId: session.user.id!,
+      type: "course_enrolled",
+      resourceType: "course",
+      resourceId: course.id,
+    });
+
+    // Check if this is the first enrollment for bonus points
+    const enrollmentCount = await db
+      .select({ count: count() })
+      .from(enrollments)
+      .where(eq(enrollments.userId, session.user.id!));
+
+    if (enrollmentCount[0]?.count === 1) {
+      await awardPoints({
+        userId: session.user.id!,
+        type: "first_enrollment",
+        description: "Bonus for your first course enrollment!",
+      });
+    }
 
     return NextResponse.json(
       {

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, desc, like, or, and, sql } from "drizzle-orm";
+import { eq, desc, like, or, and, sql, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { projects, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { trackActivity } from "@/lib/activity";
+import { awardPoints } from "@/lib/gamification";
 
 // GET /api/projects - List projects
 export async function GET(request: NextRequest) {
@@ -111,6 +112,28 @@ export async function POST(request: NextRequest) {
       resourceId: newProject[0].id,
       resourceTitle: title,
     });
+
+    // Award points for project submission
+    await awardPoints({
+      userId: session.user.id!,
+      type: "project_submitted",
+      resourceType: "project",
+      resourceId: newProject[0].id,
+    });
+
+    // Check if this is the first project for bonus points
+    const projectCount = await db
+      .select({ count: count() })
+      .from(projects)
+      .where(eq(projects.userId, session.user.id!));
+
+    if (projectCount[0]?.count === 1) {
+      await awardPoints({
+        userId: session.user.id!,
+        type: "first_project",
+        description: "Bonus for your first project submission!",
+      });
+    }
 
     return NextResponse.json(
       {

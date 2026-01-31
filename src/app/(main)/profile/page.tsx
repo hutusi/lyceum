@@ -31,7 +31,11 @@ import {
   CheckCircle,
   Clock,
   ExternalLink,
+  Award,
+  Trophy,
 } from "lucide-react";
+import { PointsDisplay, BadgeDisplay, Leaderboard } from "@/components/gamification";
+import { getUserPointsAndLevel, getUserBadges, getLeaderboard } from "@/lib/gamification";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -202,12 +206,15 @@ export default async function ProfilePage() {
 
   const userId = session.user.id!;
 
-  const [stats, userEnrollments, activities, userProjects, settings] = await Promise.all([
+  const [stats, userEnrollments, activities, userProjects, settings, pointsData, userBadges, leaderboard] = await Promise.all([
     getUserStats(userId),
     getUserEnrollments(userId),
     getUserActivities(userId),
     getUserProjects(userId),
     getUserSettingsData(userId),
+    getUserPointsAndLevel(userId),
+    getUserBadges(userId),
+    getLeaderboard(10),
   ]);
 
   return (
@@ -227,9 +234,15 @@ export default async function ProfilePage() {
             {settings?.bio && (
               <p className="text-sm text-muted-foreground mt-2">{settings.bio}</p>
             )}
-            <Badge variant="secondary" className="mt-2">
-              {session.user.role === "admin" ? "Administrator" : "Member"}
-            </Badge>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary">
+                {session.user.role === "admin" ? "Administrator" : "Member"}
+              </Badge>
+              <Badge variant="outline" className="gap-1">
+                <Trophy className="h-3 w-3" />
+                Level {pointsData.level}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -315,6 +328,10 @@ export default async function ProfilePage() {
               <TabsTrigger value="projects" className="gap-2">
                 <Rocket className="h-4 w-4" />
                 My Projects
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="gap-2">
+                <Award className="h-4 w-4" />
+                Achievements
               </TabsTrigger>
             </TabsList>
 
@@ -497,6 +514,17 @@ export default async function ProfilePage() {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            <TabsContent value="achievements" className="space-y-6">
+              <PointsDisplay
+                points={pointsData.points}
+                level={pointsData.level}
+                levelProgress={pointsData.levelProgress}
+                nextLevelThreshold={pointsData.nextLevelThreshold}
+              />
+              <BadgeDisplay badges={userBadges} />
+              <Leaderboard entries={leaderboard} currentUserId={userId} />
             </TabsContent>
           </Tabs>
         </div>

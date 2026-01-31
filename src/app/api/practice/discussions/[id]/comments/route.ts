@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { discussions, comments, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { trackActivity } from "@/lib/activity";
+import { awardPoints } from "@/lib/gamification";
 
 // GET /api/practice/discussions/[id]/comments - Get comments for a discussion
 export async function GET(
@@ -140,6 +141,14 @@ export async function POST(
       resourceId: newComment[0].id,
       resourceTitle: discussion.title,
       metadata: { discussionId: id },
+    });
+
+    // Award points for commenting
+    await awardPoints({
+      userId: session.user.id!,
+      type: "comment_added",
+      resourceType: "comment",
+      resourceId: newComment[0].id,
     });
 
     // Fetch with user info

@@ -201,6 +201,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   settings: one(userSettings),
   activities: many(userActivities),
   bookmarks: many(bookmarks),
+  points: one(userPoints),
+  pointTransactions: many(pointTransactions),
+  userBadges: many(userBadges),
 }));
 
 export const articlesRelations = relations(articles, ({ one, many }) => ({
@@ -478,5 +481,104 @@ export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
   user: one(users, {
     fields: [bookmarks.userId],
     references: [users.id],
+  }),
+}));
+
+// ============ GAMIFICATION ============
+export const userPoints = sqliteTable("user_points", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  totalPoints: integer("total_points").default(0),
+  level: integer("level").default(1),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const pointTransactions = sqliteTable("point_transactions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  points: integer("points").notNull(),
+  type: text("type", {
+    enum: [
+      "course_enrolled",
+      "lesson_completed",
+      "course_completed",
+      "discussion_created",
+      "comment_added",
+      "project_submitted",
+      "project_approved",
+      "project_featured",
+      "tool_published",
+      "tool_approved",
+      "review_added",
+      "daily_login",
+      "first_enrollment",
+      "first_project",
+      "streak_bonus",
+    ],
+  }).notNull(),
+  description: text("description"),
+  resourceType: text("resource_type"),
+  resourceId: text("resource_id"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const badges = sqliteTable("badges", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description"),
+  icon: text("icon").notNull(),
+  category: text("category", {
+    enum: ["learning", "community", "achievement", "special"],
+  }).notNull(),
+  requirement: text("requirement").notNull(),
+  threshold: integer("threshold"),
+  points: integer("points").default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const userBadges = sqliteTable("user_badges", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  badgeId: text("badge_id")
+    .notNull()
+    .references(() => badges.id, { onDelete: "cascade" }),
+  earnedAt: integer("earned_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const userPointsRelations = relations(userPoints, ({ one }) => ({
+  user: one(users, {
+    fields: [userPoints.userId],
+    references: [users.id],
+  }),
+}));
+
+export const pointTransactionsRelations = relations(pointTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [pointTransactions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const badgesRelations = relations(badges, ({ many }) => ({
+  userBadges: many(userBadges),
+}));
+
+export const userBadgesRelations = relations(userBadges, ({ one }) => ({
+  user: one(users, {
+    fields: [userBadges.userId],
+    references: [users.id],
+  }),
+  badge: one(badges, {
+    fields: [userBadges.badgeId],
+    references: [badges.id],
   }),
 }));

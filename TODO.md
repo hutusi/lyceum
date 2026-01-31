@@ -83,7 +83,7 @@
 ## Future Enhancements
 - [x] Email/password authentication
 - [ ] Social features (follow users, likes)
-- [ ] Gamification (badges, points)
+- [x] Gamification (badges, points)
 - [ ] Newsletter subscription
 - [ ] RSS feeds
 - [ ] Dark mode toggle

@@ -3,6 +3,8 @@ import { eq, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { projects, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { awardPoints } from "@/lib/gamification";
+import { trackActivity } from "@/lib/activity";
 
 // GET /api/projects/[id] - Get project details
 export async function GET(
@@ -122,6 +124,35 @@ export async function PATCH(
       .set(updateData)
       .where(eq(projects.id, id))
       .returning();
+
+    // Award points if status changed to approved or featured
+    if (status !== undefined && isAdmin && project.userId) {
+      const wasApproved = project.status === "pending" || project.status === "rejected";
+      const wasFeatured = project.status !== "featured";
+
+      if (status === "approved" && wasApproved) {
+        await awardPoints({
+          userId: project.userId,
+          type: "project_approved",
+          resourceType: "project",
+          resourceId: id,
+        });
+        await trackActivity({
+          userId: project.userId,
+          type: "project_approved",
+          resourceType: "project",
+          resourceId: id,
+          resourceTitle: project.title,
+        });
+      } else if (status === "featured" && wasFeatured) {
+        await awardPoints({
+          userId: project.userId,
+          type: "project_featured",
+          resourceType: "project",
+          resourceId: id,
+        });
+      }
+    }
 
     return NextResponse.json({
       message: "Project updated successfully",

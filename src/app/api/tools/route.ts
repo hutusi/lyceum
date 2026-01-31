@@ -4,6 +4,8 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { sharedTools, toolTags, sharedToolTags, toolVersions, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
+import { awardPoints } from "@/lib/gamification";
+import { trackActivity } from "@/lib/activity";
 
 function generateSlug(name: string): string {
   return name
@@ -238,6 +240,23 @@ export async function POST(request: NextRequest) {
         });
       }
     }
+
+    // Track activity
+    await trackActivity({
+      userId: session.user.id!,
+      type: "tool_published",
+      resourceType: "tool",
+      resourceId: toolId,
+      resourceTitle: name,
+    });
+
+    // Award points for publishing a tool
+    await awardPoints({
+      userId: session.user.id!,
+      type: "tool_published",
+      resourceType: "tool",
+      resourceId: toolId,
+    });
 
     return NextResponse.json(
       {
