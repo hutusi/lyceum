@@ -14,6 +14,7 @@ import {
   projects,
   userActivities,
   userSettings,
+  userFollows,
 } from "@/lib/db/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +37,7 @@ import {
 } from "lucide-react";
 import { PointsDisplay, BadgeDisplay, Leaderboard } from "@/components/gamification";
 import { getUserPointsAndLevel, getUserBadges, getLeaderboard } from "@/lib/gamification";
+import { FollowersList } from "@/components/social";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -68,12 +70,24 @@ async function getUserStats(userId: string) {
     .from(comments)
     .where(eq(comments.userId, userId));
 
+  const [followerCount] = await db
+    .select({ count: count() })
+    .from(userFollows)
+    .where(eq(userFollows.followingId, userId));
+
+  const [followingCount] = await db
+    .select({ count: count() })
+    .from(userFollows)
+    .where(eq(userFollows.followerId, userId));
+
   return {
     coursesEnrolled: enrollmentCount.count,
     coursesCompleted: completedCount.count,
     discussions: discussionCount.count,
     projects: projectCount.count,
     comments: commentCount.count,
+    followers: followerCount.count,
+    following: followingCount.count,
   };
 }
 
@@ -245,6 +259,12 @@ export default async function ProfilePage() {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Followers/Following */}
+            <div className="flex items-center justify-center gap-6 py-4 border-b mb-4">
+              <FollowersList userId={userId} type="followers" count={stats.followers} />
+              <FollowersList userId={userId} type="following" count={stats.following} />
+            </div>
+
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Courses Enrolled</span>

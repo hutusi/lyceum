@@ -2,9 +2,10 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { eq, desc, ne, and } from "drizzle-orm";
+import { eq, desc, ne, and, count } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { articles, tags, articleTags, users } from "@/lib/db/schema";
+import { articles, tags, articleTags, users, likes } from "@/lib/db/schema";
+import { auth } from "@/lib/auth/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { VideoEmbed } from "./video-embed";
 import { ArticleContent } from "./article-content";
+import { LikeButton } from "@/components/social";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -97,6 +99,32 @@ async function getArticle(slug: string) {
   };
 }
 
+async function getArticleLikes(articleId: string, userId?: string) {
+  const [likeCount] = await db
+    .select({ count: count() })
+    .from(likes)
+    .where(
+      and(
+        eq(likes.resourceType, "article"),
+        eq(likes.resourceId, articleId)
+      )
+    );
+
+  let isLiked = false;
+  if (userId) {
+    const userLike = await db.query.likes.findFirst({
+      where: and(
+        eq(likes.userId, userId),
+        eq(likes.resourceType, "article"),
+        eq(likes.resourceId, articleId)
+      ),
+    });
+    isLiked = !!userLike;
+  }
+
+  return { count: likeCount.count, isLiked };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = await getArticle(slug);
@@ -150,6 +178,8 @@ export default async function ArticleDetailPage({ params }: Props) {
     notFound();
   }
 
+  const session = await auth();
+  const likeData = await getArticleLikes(article.id, session?.user?.id);
   const TypeIcon = typeIcons[article.type as keyof typeof typeIcons] || Newspaper;
 
   return (
@@ -262,6 +292,16 @@ export default async function ArticleDetailPage({ params }: Props) {
               <CardTitle className="text-lg">Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <LikeButton
+                  resourceType="article"
+                  resourceId={article.id}
+                  initialCount={likeData.count}
+                  initialIsLiked={likeData.isLiked}
+                  size="default"
+                  variant="outline"
+                />
+              </div>
               <Button variant="outline" className="w-full justify-start">
                 <BookmarkPlus className="mr-2 h-4 w-4" />
                 Save for Later

@@ -2,15 +2,16 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { eq, or } from "drizzle-orm";
+import { eq, or, and, count } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { projects, users } from "@/lib/db/schema";
+import { projects, users, likes } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Github, ExternalLink, Star, Calendar } from "lucide-react";
+import { LikeButton } from "@/components/social";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -40,6 +41,32 @@ async function getProject(id: string) {
   return project[0] || null;
 }
 
+async function getProjectLikes(projectId: string, userId?: string) {
+  const [likeCount] = await db
+    .select({ count: count() })
+    .from(likes)
+    .where(
+      and(
+        eq(likes.resourceType, "project"),
+        eq(likes.resourceId, projectId)
+      )
+    );
+
+  let isLiked = false;
+  if (userId) {
+    const userLike = await db.query.likes.findFirst({
+      where: and(
+        eq(likes.userId, userId),
+        eq(likes.resourceType, "project"),
+        eq(likes.resourceId, projectId)
+      ),
+    });
+    isLiked = !!userLike;
+  }
+
+  return { count: likeCount.count, isLiked };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const project = await getProject(id);
@@ -66,6 +93,7 @@ export default async function ProjectDetailPage({ params }: Props) {
   const isAdmin = session?.user?.role === "admin";
   const isOwner = session?.user?.id === project.userId;
   const isPublic = project.status === "approved" || project.status === "featured";
+  const likeData = await getProjectLikes(id, session?.user?.id);
 
   // Only show to public if approved/featured, or if user is owner/admin
   if (!isPublic && !isOwner && !isAdmin) {
@@ -153,7 +181,15 @@ export default async function ProjectDetailPage({ params }: Props) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <LikeButton
+            resourceType="project"
+            resourceId={project.id}
+            initialCount={likeData.count}
+            initialIsLiked={likeData.isLiked}
+            size="default"
+            variant="outline"
+          />
           {project.repoUrl && (
             <Button variant="outline" asChild>
               <a href={project.repoUrl} target="_blank" rel="noopener noreferrer">

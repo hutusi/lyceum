@@ -82,7 +82,7 @@
 
 ## Future Enhancements
 - [x] Email/password authentication
-- [ ] Social features (follow users, likes)
+- [x] Social features (follow users, likes)
 - [x] Gamification (badges, points)
 - [ ] Newsletter subscription
 - [ ] RSS feeds

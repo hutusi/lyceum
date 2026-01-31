@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq, asc, sql } from "drizzle-orm";
+import { eq, asc, sql, and, count } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { discussions, comments, users, practiceTopics } from "@/lib/db/schema";
+import { discussions, comments, users, practiceTopics, likes } from "@/lib/db/schema";
 import { auth } from "@/lib/auth/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Pin, MessageCircle } from "lucide-react";
 import { CommentForm } from "./comment-form";
 import { CommentList } from "./comment-list";
+import { LikeButton } from "@/components/social";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -79,6 +80,32 @@ async function getDiscussionWithComments(id: string) {
   return { discussion: discussion[0], comments: rootComments };
 }
 
+async function getDiscussionLikes(discussionId: string, userId?: string) {
+  const [likeCount] = await db
+    .select({ count: count() })
+    .from(likes)
+    .where(
+      and(
+        eq(likes.resourceType, "discussion"),
+        eq(likes.resourceId, discussionId)
+      )
+    );
+
+  let isLiked = false;
+  if (userId) {
+    const userLike = await db.query.likes.findFirst({
+      where: and(
+        eq(likes.userId, userId),
+        eq(likes.resourceType, "discussion"),
+        eq(likes.resourceId, discussionId)
+      ),
+    });
+    isLiked = !!userLike;
+  }
+
+  return { count: likeCount.count, isLiked };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const data = await getDiscussionWithComments(id);
@@ -103,6 +130,7 @@ export default async function DiscussionDetailPage({ params }: Props) {
 
   const session = await auth();
   const { discussion, comments: commentsList } = data;
+  const likeData = await getDiscussionLikes(id, session?.user?.id);
 
   const getInitials = (name: string | null) => {
     if (!name) return "?";
@@ -151,6 +179,14 @@ export default async function DiscussionDetailPage({ params }: Props) {
         <CardContent>
           <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
             {discussion.content}
+          </div>
+          <div className="mt-6 pt-4 border-t flex items-center gap-4">
+            <LikeButton
+              resourceType="discussion"
+              resourceId={discussion.id}
+              initialCount={likeData.count}
+              initialIsLiked={likeData.isLiked}
+            />
           </div>
         </CardContent>
       </Card>

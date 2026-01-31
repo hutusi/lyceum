@@ -204,6 +204,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   points: one(userPoints),
   pointTransactions: many(pointTransactions),
   userBadges: many(userBadges),
+  followers: many(userFollows, { relationName: "following" }),
+  following: many(userFollows, { relationName: "followers" }),
+  likes: many(likes),
 }));
 
 export const articlesRelations = relations(articles, ({ one, many }) => ({
@@ -580,5 +583,49 @@ export const userBadgesRelations = relations(userBadges, ({ one }) => ({
   badge: one(badges, {
     fields: [userBadges.badgeId],
     references: [badges.id],
+  }),
+}));
+
+// ============ SOCIAL FEATURES ============
+export const userFollows = sqliteTable("user_follows", {
+  id: text("id").primaryKey(),
+  followerId: text("follower_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  followingId: text("following_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const likes = sqliteTable("likes", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  resourceType: text("resource_type", {
+    enum: ["article", "project", "discussion", "tool", "comment"],
+  }).notNull(),
+  resourceId: text("resource_id").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const userFollowsRelations = relations(userFollows, ({ one }) => ({
+  follower: one(users, {
+    fields: [userFollows.followerId],
+    references: [users.id],
+    relationName: "followers",
+  }),
+  following: one(users, {
+    fields: [userFollows.followingId],
+    references: [users.id],
+    relationName: "following",
+  }),
+}));
+
+export const likesRelations = relations(likes, ({ one }) => ({
+  user: one(users, {
+    fields: [likes.userId],
+    references: [users.id],
   }),
 }));
